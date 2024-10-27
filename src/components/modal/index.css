@@ -1,0 +1,25 @@
+.modal-filme {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  
+  .modal-content {
+    background-color: rgb(21, 21, 21);
+    padding: 20px;
+    border-radius: 10px;
+    width: 600px; /* Aumenta a largura */
+    max-width: 90%; /* Para garantir que não ultrapasse a largura da tela */
+    max-height: 80vh; /* Limita a altura a 80% da altura da tela */
+    overflow-y: auto; /* Adiciona rolagem se o conteúdo for muito grande */
+    text-align: center;
+    position: relative;
+  }
+  
+  .modal-imagem {
+    width: 20%;
+    height: auto;
+    margin-bottom: 15px;
+  }
+  
