@@ -16,6 +16,13 @@ const Filmes: React.FC = () => {
     const [modalAberto, setModalAberto] = useState<boolean>(false);
     const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
+    const calcularSimilaridade = (titulo1: string, titulo2: string): number => {
+        const palavras1 = titulo1.toLowerCase().split(' ');
+        const palavras2 = titulo2.toLowerCase().split(' ');
+        const palavrasComuns = palavras1.filter((palavra) => palavras2.includes(palavra));
+        return palavrasComuns.length / Math.max(palavras1.length, palavras2.length);
+    };
+
     useEffect(() => {
         const fetchFavoritos = async () => {
             const fetchedFavoritos = await Promise.all(
@@ -39,6 +46,7 @@ const Filmes: React.FC = () => {
             setFavoritos(fetchedFavoritos.filter(Boolean) as FilmeDetalhado[]);
         };
 
+
         const fetchFilmesPorCategoria = async () => {
             const categoriasComFilmes: Record<string, FilmeDetalhado[]> = {};
             for (const categoria of categorias) {
@@ -48,11 +56,24 @@ const Filmes: React.FC = () => {
                             `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(filme)}&language=pt-BR`
                         );
                         const data = await response.json();
-                        if (data.results.length > 0) {
+        
+                        // Primeiro tenta uma correspondência exata
+                        let filmeCorreto = data.results.find((result: any) => result.title.toLowerCase() === filme.toLowerCase());
+        
+                        // Se não encontrar, tenta buscar uma correspondência aproximada com base em similaridade
+                        if (!filmeCorreto && data.results.length > 0) {
+                            filmeCorreto = data.results.reduce((maisSimilar: any, result: any) => {
+                                return calcularSimilaridade(result.title, filme) > calcularSimilaridade(maisSimilar.title, filme)
+                                    ? result
+                                    : maisSimilar;
+                            }, data.results[0]);
+                        }
+        
+                        if (filmeCorreto) {
                             return {
-                                nome: data.results[0].title,
-                                imagem: `https://image.tmdb.org/t/p/w500${data.results[0].poster_path}`,
-                                descricao: data.results[0].overview,
+                                nome: filmeCorreto.title,
+                                imagem: `https://image.tmdb.org/t/p/w500${filmeCorreto.poster_path}`,
+                                descricao: filmeCorreto.overview,
                             };
                         }
                         return null;
@@ -62,6 +83,7 @@ const Filmes: React.FC = () => {
             }
             setCategoriasComFilmes(categoriasComFilmes);
         };
+
 
         fetchFavoritos();
         fetchFilmesPorCategoria();
@@ -127,7 +149,7 @@ const Filmes: React.FC = () => {
                 </div>
             ))}
 
-            <ModalFilme open={modalAberto} onClose={fecharModal} filmeSelecionado={filmeSelecionado}/>
+            <ModalFilme open={modalAberto} onClose={fecharModal} filmeSelecionado={filmeSelecionado} />
         </div>
     );
 };
